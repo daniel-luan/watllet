@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">Watllet</string>
+    <string name="refresh">Refresh</string>
+    <string name="flex_0">Flex: $0</string>
+    <string name="meal_plan_0">Meal Plan: $0</string>
+    <string name="usage_0">Usage today: $0</string>
+    <string name="hello">Hello</string>
+    <string name="card_number">Card Number:</string>
+    <string name="title_activity_login">Sign in</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password (optional)</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."
+    </string>
+    <string name="target_today_0">Target Today: $0</string>
+    <string name="last_day">Last Day:</string>
+</resources>
