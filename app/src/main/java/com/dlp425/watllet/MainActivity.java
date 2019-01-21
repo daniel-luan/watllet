@@ -2,20 +2,23 @@ package com.dlp425.watllet;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.ValueCallback;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.series.DataPoint;
-import com.jjoe64.graphview.series.LineGraphSeries;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -30,6 +33,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setLogo(R.mipmap.ic_launcher);
+        getSupportActionBar().setDisplayUseLogoEnabled(true);
 
         SharedPreferences sp1 = this.getSharedPreferences("Login", MODE_PRIVATE);
 
@@ -46,16 +55,40 @@ public class MainActivity extends AppCompatActivity {
             getBalance();
         }
 
-        GraphView graph = (GraphView) findViewById(R.id.graph);
-        LineGraphSeries<DataPoint> series = new LineGraphSeries<>(new DataPoint[] {
-                new DataPoint(0, 1),
-                new DataPoint(1, 5),
-                new DataPoint(2, 3),
-                new DataPoint(3, 2),
-                new DataPoint(4, 6)
-        });
-        graph.addSeries(series);
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.actionmenu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_settings:
+                // User chose the "Settings" item, show the app settings UI...
+                return true;
+
+            case R.id.action_logout:
+                SharedPreferences sp1 = this.getSharedPreferences("Login", MODE_PRIVATE);
+                SharedPreferences.Editor edit = sp1.edit();
+                edit.clear();
+                edit.apply();
+
+                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                startActivity(intent);
+                finish();
+                return true;
+
+            default:
+                // If we got here, the user's action was not recognized.
+                // Invoke the superclass to handle it.
+                return super.onOptionsItemSelected(item);
+
+        }
     }
 
     public void buttonRefresh(View view) {
@@ -67,6 +100,9 @@ public class MainActivity extends AppCompatActivity {
         final double totalSteps = 6.0;
         final WebView webview = findViewById(R.id.webview);
         final ProgressBar progress = findViewById(R.id.progress);
+        final Button button = findViewById(R.id.refresh);
+
+        button.setEnabled(false);
 
         progress.setVisibility(View.VISIBLE);
         progress.setProgress(1);
@@ -79,6 +115,29 @@ public class MainActivity extends AppCompatActivity {
         final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
 
         webview.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request,
+                                        WebResourceError error) {
+
+                Toast.makeText(getApplicationContext(),
+                        "WebView Error" + error.getDescription(),
+                        Toast.LENGTH_SHORT).show();
+
+                super.onReceivedError(view, request, error);
+
+            }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                if (request.getUrl().getHost().contains("google")||
+                        request.getUrl().getHost().contains("twitter")){
+                    return true;
+                }
+
+                return false;
+            }
+
+
             @Override
             public void onPageFinished(WebView view, String url) {
                 if (url.equals("https://watcard.uwaterloo.ca/OneWeb/Account/LogOn")) {
@@ -95,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
                                 public void onReceiveValue(String value) {
                                     TextView textView = findViewById(R.id.name);
                                     textView.setText(String.format("Hello %s", value.replace("\"", "")));
+//                                    textView.setText("Hello Mr. Goose");
                                 }
                             });
                     webview.evaluateJavascript("document.getElementsByClassName('ow-value')[1].innerHTML",
@@ -105,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
                                     textView.setText(String.format("Card Number: %s",
                                             value.replace("\"", "")
                                                     .replace(" ", "")));
+//                                    textView.setText("Card Number: 12345678");
                                 }
                             });
                     webview.loadUrl("https://watcard.uwaterloo.ca/OneWeb/Financial/Balances");
@@ -144,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
                 } else if (url.startsWith("https://watcard.uwaterloo.ca/OneWeb/Financial/TransactionsPass?")) {
                     webview.evaluateJavascript(
                             "(function(){var amount = 0;for (let tr of document.querySelectorAll('tr')) " +
-                                    "{if (tr.cells[1].getAttribute('data-title') == 'Amount:') " +
+                                    "{if ((tr.cells[1].getAttribute('data-title') == 'Amount:') && (tr.cells[2].innerHTML == '1'))" +
                                     "{amount = amount + parseFloat(tr.cells[1].innerHTML.split('$')[1])}}" +
                                     "return amount.toFixed(2);})();",
                             new ValueCallback<String>() {
@@ -189,6 +250,8 @@ public class MainActivity extends AppCompatActivity {
                 }else if(url.equals("https://uwaterloo.ca/food-services/menu")){
                     progress.setProgress((int)(6/totalSteps*100), true);
                     progress.setVisibility(View.INVISIBLE);
+
+                    button.setEnabled(true);
                 }
             }
         });

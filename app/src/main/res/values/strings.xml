@@ -22,4 +22,6 @@
     </string>
     <string name="target_today_0">Target Today: $0</string>
     <string name="last_day">Last Day:</string>
+    <string name="settings">Settings</string>
+    <string name="logout">Logout</string>
 </resources>

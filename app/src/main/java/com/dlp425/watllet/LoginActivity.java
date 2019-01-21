@@ -1,11 +1,15 @@
 package com.dlp425.watllet;
 
-import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -48,16 +52,78 @@ public class LoginActivity extends AppCompatActivity {
                 edit.putString("Pin", pin.trim());
                 edit.apply();
 
-//                loginButton.setEnabled(true);
-//                progress.setVisibility(View.INVISIBLE);
 
-                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                startActivity(intent);
-                finish();
+                final WebView webview = findViewById(R.id.login_webview);
+                webview.getSettings().setJavaScriptEnabled(true);
+                webview.getSettings().setDomStorageEnabled(true);
+                webview.getSettings().setAppCacheEnabled(false);
+                webview.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+
+                check_login();
             }
         });
 
     }
+
+    void check_login() {
+
+        final WebView webview = findViewById(R.id.login_webview);
+        final ProgressBar progress = findViewById(R.id.progressBar);
+        final Button loginButton = findViewById(R.id.btn_login);
+
+        final SharedPreferences sp1 = this.getSharedPreferences("Login", MODE_PRIVATE);
+
+        final String acc = sp1.getString("Acc", null);
+        final String pin = sp1.getString("Pin", null);
+
+        loginButton.setEnabled(false);
+        progress.setVisibility(View.VISIBLE);
+
+        webview.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request,
+                                        WebResourceError error) {
+
+                Toast.makeText(getApplicationContext(),
+                        "WebView Error" + error.getDescription(),
+                        Toast.LENGTH_SHORT).show();
+
+                super.onReceivedError(view, request, error);
+
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                if (url.equals("https://watcard.uwaterloo.ca/OneWeb/Account/LogOn#first")) {
+                    webview.loadUrl("javascript:(function(){" +
+                            String.format("document.getElementById('Account').value='%s';", acc) +
+                            String.format("document.getElementById('Password').value='%s';", pin) +
+                            "document.forms[1].submit();" +
+                            "})()");
+                } else if (url.equals("https://watcard.uwaterloo.ca/OneWeb/Account/LogOn")) {
+                    loginButton.setEnabled(true);
+                    progress.setVisibility(View.INVISIBLE);
+
+                    SharedPreferences.Editor edit = sp1.edit();
+                    edit.clear();
+                    edit.apply();
+
+                    Toast.makeText(getBaseContext(), "Wrong Account or PIN!", Toast.LENGTH_LONG).show();
+
+                }else if (url.equals("https://watcard.uwaterloo.ca/OneWeb/Account/Personal")) {
+                    Toast.makeText(getBaseContext(), "Logged In!", Toast.LENGTH_LONG).show();
+                    loginButton.setEnabled(true);
+                    progress.setVisibility(View.INVISIBLE);
+
+                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+
+        }});
+        webview.loadUrl("https://watcard.uwaterloo.ca/OneWeb/Account/LogOn#first");
+    }
+
 
     @Override
     public void onBackPressed() {
