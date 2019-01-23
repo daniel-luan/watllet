@@ -111,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
 
         final String acc = sp1.getString("Acc", null);
         final String pin = sp1.getString("Pin", null);
+        final String res = sp1.getString("Res", null);
 
         final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
 
@@ -248,6 +249,29 @@ public class MainActivity extends AppCompatActivity {
                     progress.setProgress((int)(5/totalSteps*100), true);
                     webview.loadUrl("https://uwaterloo.ca/food-services/menu");
                 }else if(url.equals("https://uwaterloo.ca/food-services/menu")){
+                    int resNum = 1;
+
+                    switch (res){
+                        case "V1":
+                            resNum = 1;
+                            break;
+                        case "Rev":
+                            resNum = 2;
+                            break;
+                        case "UWP":
+                            resNum = 3;
+                            break;
+                        default:
+                            resNum = 1;
+                            break;
+                    }
+
+                    Calendar calendar = Calendar.getInstance();
+                    int day = calendar.get(Calendar.DAY_OF_WEEK) - 1;
+
+                    if ((day > 5) || (day < 1)) day = 0;
+
+                    webview.loadUrl(String.format("javascript:(function() {document.getElementsByClassName('uw_food_services-menu')[0].rows[%d].cells[%d].scrollIntoView()})()", resNum, day));
                     progress.setProgress((int)(6/totalSteps*100), true);
                     progress.setVisibility(View.INVISIBLE);
 

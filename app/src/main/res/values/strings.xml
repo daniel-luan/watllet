@@ -24,4 +24,13 @@
     <string name="last_day">Last Day:</string>
     <string name="settings">Settings</string>
     <string name="logout">Logout</string>
+    <string name="tos">I agree to the terms of service</string>
+
+
+    <string-array name="res_array">
+        <item>None</item>
+        <item>Rev</item>
+        <item>V1</item>
+        <item>UWP</item>
+    </string-array>
 </resources>

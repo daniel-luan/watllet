@@ -10,9 +10,12 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 public class LoginActivity extends AppCompatActivity {
@@ -22,13 +25,21 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        final SharedPreferences sp1 = this.getSharedPreferences("Login", MODE_PRIVATE);
 
+        Spinner spinner = findViewById(R.id.res_spinner);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.res_array, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(adapter);
+
+
+        final SharedPreferences sp1 = this.getSharedPreferences("Login", MODE_PRIVATE);
 
         final ProgressBar progress = findViewById(R.id.progressBar);
 
         final EditText accountText = findViewById(R.id.input_account);
         final EditText pinText = findViewById(R.id.input_password);
+        final Spinner resSpinner = findViewById(R.id.res_spinner);
 
         final Button loginButton = findViewById(R.id.btn_login);
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -46,10 +57,12 @@ public class LoginActivity extends AppCompatActivity {
 
                 String acc = accountText.getText().toString();
                 String pin = pinText.getText().toString();
+                String res = resSpinner.getSelectedItem().toString();
 
                 SharedPreferences.Editor edit = sp1.edit();
                 edit.putString("Acc", acc.trim());
                 edit.putString("Pin", pin.trim());
+                edit.putString("Res", res.trim());
                 edit.apply();
 
 
@@ -141,6 +154,9 @@ public class LoginActivity extends AppCompatActivity {
         EditText pinText = findViewById(R.id.input_password);
         String pin = pinText.getText().toString();
 
+        CheckBox tos = findViewById(R.id.checkbox_tos);
+
+
         if (acc.isEmpty() || acc.length() != 8) {
             accountText.setError("Enter a valid Watcard Number");
             valid = false;
@@ -153,6 +169,13 @@ public class LoginActivity extends AppCompatActivity {
             valid = false;
         } else {
             accountText.setError(null);
+        }
+
+        if(!tos.isChecked()){
+            tos.setError("");
+            valid = false;
+        }else{
+            tos.setError(null);
         }
 
         return valid;

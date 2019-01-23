@@ -37,9 +37,10 @@
         android:paddingRight="24dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.328">
+        app:layout_constraintVertical_bias="0.258">
 
 
         <EditText
@@ -56,6 +57,19 @@
             android:layout_height="wrap_content"
             android:hint="PIN"
             android:inputType="textPassword" />
+
+        <Spinner
+            android:id="@+id/res_spinner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"/>
+
+        <CheckBox
+            android:id="@+id/checkbox_tos"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/tos" />
 
         <android.support.v7.widget.AppCompatButton
             android:id="@+id/btn_login"
