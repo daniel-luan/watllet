@@ -154,8 +154,8 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void onReceiveValue(String value) {
                                     TextView textView = findViewById(R.id.name);
-                                    textView.setText(String.format("Hello %s", value.replace("\"", "")));
-//                                    textView.setText("Hello Mr. Goose");
+                                   textView.setText(String.format("Hello %s", value.replace("\"", "")));
+                                    // textView.setText("Hello Mr. Goose");
                                 }
                             });
                     webview.evaluateJavascript("document.getElementsByClassName('ow-value')[1].innerHTML",
@@ -163,10 +163,10 @@ public class MainActivity extends AppCompatActivity {
                                 @Override
                                 public void onReceiveValue(String value) {
                                     TextView textView = findViewById(R.id.cardNum);
-                                    textView.setText(String.format("Card Number: %s",
-                                            value.replace("\"", "")
-                                                    .replace(" ", "")));
-//                                    textView.setText("Card Number: 12345678");
+                                   textView.setText(String.format("Card Number: %s",
+                                           value.replace("\"", "")
+                                                   .replace(" ", "")));
+                                    // textView.setText("Card Number: 12345678");
                                 }
                             });
                     webview.loadUrl("https://watcard.uwaterloo.ca/OneWeb/Financial/Balances");
