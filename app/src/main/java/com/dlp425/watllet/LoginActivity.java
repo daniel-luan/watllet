@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
@@ -31,6 +33,11 @@ public class LoginActivity extends AppCompatActivity {
                 R.array.res_array, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
+
+        String checkBoxText = "I agree to all the <a href='https://www.youtube.com/watch?v=dQw4w9WgXcQ' > Terms and Conditions</a>";
+        CheckBox tosCheck = findViewById(R.id.checkbox_tos);
+        tosCheck.setText(Html.fromHtml(checkBoxText, Html.FROM_HTML_MODE_LEGACY));
+        tosCheck.setMovementMethod(LinkMovementMethod.getInstance());
 
 
         final SharedPreferences sp1 = this.getSharedPreferences("Login", MODE_PRIVATE);

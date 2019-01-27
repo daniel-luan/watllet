@@ -7,8 +7,8 @@ android {
         applicationId "com.dlp425.watllet"
         minSdkVersion 24
         targetSdkVersion 28
-        versionCode 7
-        versionName "2018.01.23"
+        versionCode 9
+        versionName "2018.01.27"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

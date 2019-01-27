@@ -116,6 +116,22 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/lastDay" />
 
+    <TextView
+        android:id="@+id/stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:text="@string/icon_time"
+        android:textSize="32sp"
+        android:textColor="@color/colorPrimaryDark"
+        android:clickable="true"
+        android:focusable="true"
+        android:onClick="stop"
+        app:layout_constraintBottom_toBottomOf="@+id/refresh"
+        app:layout_constraintEnd_toStartOf="@+id/refresh"
+        app:layout_constraintTop_toTopOf="@+id/refresh" />
+
+
 
     <WebView
         android:id="@+id/webview"

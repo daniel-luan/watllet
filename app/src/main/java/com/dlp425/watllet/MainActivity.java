@@ -2,6 +2,7 @@ package com.dlp425.watllet;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -24,6 +25,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 
@@ -39,6 +41,13 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowHomeEnabled(true);
         getSupportActionBar().setLogo(R.mipmap.ic_launcher);
         getSupportActionBar().setDisplayUseLogoEnabled(true);
+
+        Typeface font = Typeface.createFromAsset(getAssets(), "fa-solid-900.ttf");
+
+        TextView stop = findViewById(R.id.stop);
+        stop.setTypeface(font);
+
+        loadCache();
 
         SharedPreferences sp1 = this.getSharedPreferences("Login", MODE_PRIVATE);
 
@@ -91,8 +100,48 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    void loadCache() {
+        SharedPreferences cache = this.getSharedPreferences("Cache", MODE_PRIVATE);
+
+
+        TextView nameText = findViewById(R.id.name);
+        nameText.setText(String.format(Locale.getDefault(), "Hello %s", cache.getString("Name", "")));
+
+        TextView numberText = findViewById(R.id.cardNum);
+        numberText.setText(String.format(Locale.getDefault(), "Card Number: %d", cache.getInt("Number", 0)));
+
+        TextView mealText = findViewById(R.id.meal);
+        mealText.setText(String.format(Locale.getDefault(), "Meal Plan: $%.2f", cache.getFloat("Meal", 0)));
+
+        TextView flexText = findViewById(R.id.flex);
+        flexText.setText(String.format(Locale.getDefault(), "Flex: $%.2f", cache.getFloat("Flex", 0)));
+
+        TextView usageView = findViewById(R.id.usage);
+        usageView.setText(String.format(Locale.getDefault(), "Usage today: $%.2f (%s)", cache.getFloat("Usage", 0), cache.getString("Today", "")));
+
+
+        TextView lastDayText = findViewById(R.id.lastDay);
+        TextView targetText = findViewById(R.id.target);
+        lastDayText.setText(String.format(Locale.getDefault(), "Last Day: %s (%d days away)", cache.getString("LastDay", ""), cache.getInt("Diff", 0)));
+        targetText.setText(String.format(Locale.getDefault(), "Target Today: $%.2f", cache.getFloat("Target", 0)));
+
+    }
+
     public void buttonRefresh(View view) {
         getBalance();
+    }
+
+    public void stop(View v) {
+
+        final WebView webview = findViewById(R.id.webview);
+        final ProgressBar progress = findViewById(R.id.progress);
+        final Button button = findViewById(R.id.refresh);
+        webview.stopLoading();
+        webview.getSettings().setJavaScriptEnabled(false);
+        webview.getSettings().setJavaScriptEnabled(true);
+        webview.loadUrl("about:blank");
+        progress.setVisibility(View.INVISIBLE);
+        button.setEnabled(true);
     }
 
     void getBalance() {
@@ -108,6 +157,9 @@ public class MainActivity extends AppCompatActivity {
         progress.setProgress(1);
 
         SharedPreferences sp1 = this.getSharedPreferences("Login", MODE_PRIVATE);
+        final SharedPreferences cache = this.getSharedPreferences("Cache", MODE_PRIVATE);
+        final SharedPreferences.Editor cache_edit = cache.edit();
+
 
         final String acc = sp1.getString("Acc", null);
         final String pin = sp1.getString("Pin", null);
@@ -130,8 +182,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                if (request.getUrl().getHost().contains("google")||
-                        request.getUrl().getHost().contains("twitter")){
+                if (request.getUrl().getHost().contains("google") ||
+                        request.getUrl().getHost().contains("twitter")) {
                     return true;
                 }
 
@@ -142,120 +194,168 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onPageFinished(WebView view, String url) {
                 if (url.equals("https://watcard.uwaterloo.ca/OneWeb/Account/LogOn")) {
-                    webview.loadUrl("javascript:(function(){" +
-                            String.format("document.getElementById('Account').value='%s';", acc) +
-                            String.format("document.getElementById('Password').value='%s';", pin) +
-                            "document.forms[1].submit();" +
-                            "})()");
-                    progress.setProgress((int)(1/totalSteps*100), true);
+                    try {
+                        webview.loadUrl("javascript:(function(){" +
+                                String.format("document.getElementById('Account').value='%s';", acc) +
+                                String.format("document.getElementById('Password').value='%s';", pin) +
+                                "document.forms[1].submit();" +
+                                "})()");
+                        progress.setProgress((int) (1 / totalSteps * 100), true);
+                    } catch (Exception e) {
+                        Toast.makeText(getBaseContext(), "Error logging in!", Toast.LENGTH_SHORT).show();
+                        stop(null);
+                    }
                 } else if (url.equals("https://watcard.uwaterloo.ca/OneWeb/Account/Personal")) {
-                    webview.evaluateJavascript("document.getElementsByClassName('ow-value')[0].innerHTML",
-                            new ValueCallback<String>() {
-                                @Override
-                                public void onReceiveValue(String value) {
-                                    TextView textView = findViewById(R.id.name);
-                                   textView.setText(String.format("Hello %s", value.replace("\"", "")));
-                                    // textView.setText("Hello Mr. Goose");
-                                }
-                            });
-                    webview.evaluateJavascript("document.getElementsByClassName('ow-value')[1].innerHTML",
-                            new ValueCallback<String>() {
-                                @Override
-                                public void onReceiveValue(String value) {
-                                    TextView textView = findViewById(R.id.cardNum);
-                                   textView.setText(String.format("Card Number: %s",
-                                           value.replace("\"", "")
-                                                   .replace(" ", "")));
-                                    // textView.setText("Card Number: 12345678");
-                                }
-                            });
-                    webview.loadUrl("https://watcard.uwaterloo.ca/OneWeb/Financial/Balances");
-                    progress.setProgress((int)(2/totalSteps*100), true);
+                    try {
+                        webview.evaluateJavascript("document.getElementsByClassName('ow-value')[0].innerHTML",
+                                new ValueCallback<String>() {
+                                    @Override
+                                    public void onReceiveValue(String value) {
+                                        TextView textView = findViewById(R.id.name);
+                                        String name = value.replace("\"", "");
+                                        cache_edit.putString("Name", name);
+                                        cache_edit.apply();
+                                        textView.setText(String.format(Locale.getDefault(), "Hello %s", name));
+                                        // textView.setText("Hello Mr. Goose");
+                                    }
+                                });
+                        webview.evaluateJavascript("document.getElementsByClassName('ow-value')[1].innerHTML",
+                                new ValueCallback<String>() {
+                                    @Override
+                                    public void onReceiveValue(String value) {
+
+                                        int number = Integer.parseInt(value.replace("\"", "").replace(" ", ""));
+                                        cache_edit.putInt("Number", number);
+                                        cache_edit.apply();
+                                        TextView textView = findViewById(R.id.cardNum);
+                                        textView.setText(String.format(Locale.getDefault(), "Card Number: %d", number));
+                                        // textView.setText("Card Number: 12345678");
+                                    }
+                                });
+                        webview.loadUrl("https://watcard.uwaterloo.ca/OneWeb/Financial/Balances");
+                        progress.setProgress((int) (2 / totalSteps * 100), true);
+                    } catch (Exception e) {
+                        Toast.makeText(getBaseContext(), "Error getting name and card number!", Toast.LENGTH_SHORT).show();
+                        stop(null);
+                    }
                 } else if (url.equals("https://watcard.uwaterloo.ca/OneWeb/Financial/Balances")) {
-                    webview.evaluateJavascript(
-                            "(function() {for (let tr of document.querySelectorAll('tr')) " +
-                                    "{if (tr.cells[0].innerHTML == '1') " +
-                                    "{return tr.cells[3].innerHTML}}})();",
-                            new ValueCallback<String>() {
-                                @Override
-                                public void onReceiveValue(String value) {
-                                    TextView textView = findViewById(R.id.meal);
-                                    textView.setText(String.format("Meal Plan: $%s", value.replaceAll("[^\\d.]", "" )));
-                                }
-                            });
-                    webview.evaluateJavascript(
-                            "(function() {for (let tr of document.querySelectorAll('tr')) " +
-                                    "{if (tr.cells[0].innerHTML == '6') " +
-                                    "{return tr.cells[3].innerHTML}}})();",
-                            new ValueCallback<String>() {
-                                @Override
-                                public void onReceiveValue(String value) {
-                                    TextView textView = findViewById(R.id.flex);
-                                    textView.setText(String.format("Flex: $%s", value.replaceAll("[^\\d.]", "" )));
-                                }
-                            });
+                    try {
+                        webview.evaluateJavascript(
+                                "(function() {for (let tr of document.querySelectorAll('tr')) " +
+                                        "{if (tr.cells[0].innerHTML == '1') " +
+                                        "{return tr.cells[3].innerHTML}}})();",
+                                new ValueCallback<String>() {
+                                    @Override
+                                    public void onReceiveValue(String value) {
+                                        Double meal = Double.parseDouble(value.replaceAll("[^\\d.]", ""));
+                                        cache_edit.putFloat("Meal", meal.floatValue());
+                                        cache_edit.apply();
+                                        TextView textView = findViewById(R.id.meal);
+                                        textView.setText(String.format(Locale.getDefault(), "Meal Plan: $%.2f", meal));
+                                    }
+                                });
+                        webview.evaluateJavascript(
+                                "(function() {for (let tr of document.querySelectorAll('tr')) " +
+                                        "{if (tr.cells[0].innerHTML == '6') " +
+                                        "{return tr.cells[3].innerHTML}}})();",
+                                new ValueCallback<String>() {
+                                    @Override
+                                    public void onReceiveValue(String value) {
+                                        Double flex = Double.parseDouble(value.replaceAll("[^\\d.]", ""));
+                                        cache_edit.putFloat("Flex", flex.floatValue());
+                                        cache_edit.apply();
+                                        TextView textView = findViewById(R.id.flex);
+                                        textView.setText(String.format(Locale.getDefault(), "Flex: $%.2f", flex));
+                                    }
+                                });
 
 
-                    Date today = Calendar.getInstance().getTime();
-                    String reportDate = df.format(today).replace("/", "%2F");
+                        Date today = Calendar.getInstance().getTime();
+                        String reportDate = df.format(today).replace("/", "%2F");
 
 
-                    webview.loadUrl("https://watcard.uwaterloo.ca/OneWeb/Financial/TransactionsPass?dateFrom="
-                            + reportDate + "+00%3A00%3A00&dateTo=" + reportDate + "+23%3A59%3A59&returnRows=1000&_=1545508546483");
-                    progress.setProgress((int)(3/totalSteps*100), true);
+                        webview.loadUrl("https://watcard.uwaterloo.ca/OneWeb/Financial/TransactionsPass?dateFrom="
+                                + reportDate + "+00%3A00%3A00&dateTo=" + reportDate + "+23%3A59%3A59&returnRows=1000&_=1545508546483");
+                        progress.setProgress((int) (3 / totalSteps * 100), true);
+                    } catch (Exception e) {
+                        Toast.makeText(getBaseContext(), "Error getting balance!", Toast.LENGTH_SHORT).show();
+                        stop(null);
+                    }
                 } else if (url.startsWith("https://watcard.uwaterloo.ca/OneWeb/Financial/TransactionsPass?")) {
-                    webview.evaluateJavascript(
-                            "(function(){var amount = 0;for (let tr of document.querySelectorAll('tr')) " +
-                                    "{if ((tr.cells[1].getAttribute('data-title') == 'Amount:') && (tr.cells[2].innerHTML == '1'))" +
-                                    "{amount = amount + parseFloat(tr.cells[1].innerHTML.split('$')[1])}}" +
-                                    "return amount.toFixed(2);})();",
-                            new ValueCallback<String>() {
-                                @Override
-                                public void onReceiveValue(String value) {
-                                    Date today = Calendar.getInstance().getTime();
-                                    String reportDate = df.format(today);
+                    try {
+                        webview.evaluateJavascript(
+                                "(function(){var amount = 0;for (let tr of document.querySelectorAll('tr')) " +
+                                        "{if ((tr.cells[1].getAttribute('data-title') == 'Amount:') && (tr.cells[2].innerHTML == '1'))" +
+                                        "{amount = amount + parseFloat(tr.cells[1].innerHTML.split('$')[1])}}" +
+                                        "return amount.toFixed(2);})();",
+                                new ValueCallback<String>() {
+                                    @Override
+                                    public void onReceiveValue(String value) {
+                                        Date today = Calendar.getInstance().getTime();
+                                        String reportDate = df.format(today);
 
-                                    TextView textView = findViewById(R.id.usage);
-                                    textView.setText(String.format("Usage today: $%s (%s)", value.replaceAll("[^\\d.]", "" ), reportDate));
-                                }
-                            });
-                    webview.loadUrl("https://uwaterloo.ca/registrar/important-dates/entry?id=42");
-                    progress.setProgress((int)(4/totalSteps*100), true);
-                } else if (url.equals("https://uwaterloo.ca/registrar/important-dates/entry?id=42")){
-                    webview.evaluateJavascript(
-                            "(function() " +
-                                    "{for (let entry of document.getElementsByClassName('important-dates__dates')[0].children)" +
-                                    "{ var date = Date.parse(entry.innerText.split('\\n')[1]); " +
-                                    "if (date > Date.now()){ return date;}}})();",
-                            new ValueCallback<String>() {
-                        @Override
-                        public void onReceiveValue(String value) {
-                            TextView lastDayText = findViewById(R.id.lastDay);
-                            TextView targetText = findViewById(R.id.target);
-                            TextView mealText = findViewById(R.id.meal);
+                                        Float usage = Float.parseFloat(value.replaceAll("[^\\d.]", ""));
 
-                            Date lastDay = new java.util.Date(Long.parseLong(value.replace(".0", "")));
+                                        cache_edit.putString("Today", reportDate);
+                                        cache_edit.putFloat("Usage", usage);
+                                        cache_edit.apply();
+
+                                        TextView textView = findViewById(R.id.usage);
+                                        textView.setText(String.format(Locale.getDefault(), "Usage today: $%.2f (%s)", usage, reportDate));
+                                    }
+                                });
+                        webview.loadUrl("https://uwaterloo.ca/registrar/important-dates/entry?id=42");
+                        progress.setProgress((int) (4 / totalSteps * 100), true);
+                    } catch (Exception e) {
+                        Toast.makeText(getBaseContext(), "Error getting usage!", Toast.LENGTH_SHORT).show();
+                        stop(null);
+                    }
+                } else if (url.equals("https://uwaterloo.ca/registrar/important-dates/entry?id=42")) {
+                    try {
+                        webview.evaluateJavascript(
+                                "(function() " +
+                                        "{for (let entry of document.getElementsByClassName('important-dates__dates')[0].children)" +
+                                        "{ var date = Date.parse(entry.innerText.split('\\n')[1]); " +
+                                        "if (date > Date.now()){ return date;}}})();",
+                                new ValueCallback<String>() {
+                                    @Override
+                                    public void onReceiveValue(String value) {
+                                        TextView lastDayText = findViewById(R.id.lastDay);
+                                        TextView targetText = findViewById(R.id.target);
+                                        TextView mealText = findViewById(R.id.meal);
+
+                                        Date lastDay = new java.util.Date(Long.parseLong(value.replace(".0", "")));
+                                        String lastDayString = df.format(lastDay);
+                                        cache_edit.putString("LastDay", lastDayString);
 
 
-                            Date now = new java.util.Date();
-                            long diff = TimeUnit.MILLISECONDS.toDays(lastDay.getTime() - now.getTime());
-                            double meal = Double.parseDouble(mealText.getText().toString().replace("Meal Plan: $", ""));
+                                        Date now = new java.util.Date();
+                                        int diff = Math.toIntExact(TimeUnit.MILLISECONDS.toDays(lastDay.getTime() - now.getTime()));
+                                        float meal = cache.getFloat("Meal", Float.parseFloat(mealText.getText().toString().replace("Meal Plan: $", "")));
+                                        float target = meal / diff;
+                                        cache_edit.putInt("Diff", diff);
+                                        cache_edit.putFloat("Target", target);
+                                        cache_edit.apply();
 
-                            lastDayText.setText(String.format("Last Day: %s (%d days away)", df.format(lastDay), diff));
-                            targetText.setText(String.format("Target Today: $%.2f", meal/diff));
+                                        lastDayText.setText(String.format(Locale.getDefault(), "Last Day: %s (%d days away)", lastDayString, diff));
+                                        targetText.setText(String.format(Locale.getDefault(), "Target Today: $%.2f", target));
 
-                        }
-                    });
-                    progress.setProgress((int)(5/totalSteps*100), true);
-                    webview.loadUrl("https://uwaterloo.ca/food-services/menu");
-                }else if(url.equals("https://uwaterloo.ca/food-services/menu")){
+                                    }
+                                });
+                        progress.setProgress((int) (5 / totalSteps * 100), true);
+                        webview.loadUrl("https://uwaterloo.ca/food-services/menu");
+                    } catch (Exception e) {
+                        Toast.makeText(getBaseContext(), "Error getting target!", Toast.LENGTH_SHORT).show();
+                        stop(null);
+                    }
+                } else if (url.equals("https://uwaterloo.ca/food-services/menu")) {
                     int resNum = 1;
 
-                    switch (res){
+                    switch (res) {
                         case "V1":
                             resNum = 1;
                             break;
-                        case "Rev":
+                        case "REV":
                             resNum = 2;
                             break;
                         case "UWP":
@@ -271,8 +371,8 @@ public class MainActivity extends AppCompatActivity {
 
                     if ((day > 5) || (day < 1)) day = 0;
 
-                    webview.loadUrl(String.format("javascript:(function() {document.getElementsByClassName('uw_food_services-menu')[0].rows[%d].cells[%d].scrollIntoView()})()", resNum, day));
-                    progress.setProgress((int)(6/totalSteps*100), true);
+                    webview.loadUrl(String.format(Locale.getDefault(), "javascript:(function() {document.getElementsByClassName('uw_food_services-menu')[0].rows[%d].cells[%d].scrollIntoView()})()", resNum, day));
+                    progress.setProgress((int) (6 / totalSteps * 100), true);
                     progress.setVisibility(View.INVISIBLE);
 
                     button.setEnabled(true);

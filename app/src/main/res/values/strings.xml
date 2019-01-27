@@ -29,8 +29,10 @@
 
     <string-array name="res_array">
         <item>None</item>
-        <item>Rev</item>
+        <item>REV</item>
         <item>V1</item>
         <item>UWP</item>
     </string-array>
+
+    <string name="icon_time">&#xf00d;</string>
 </resources>
