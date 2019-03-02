@@ -7,8 +7,8 @@ android {
         applicationId "com.dlp425.watllet"
         minSdkVersion 24
         targetSdkVersion 28
-        versionCode 9
-        versionName "2018.01.27"
+        versionCode 11
+        versionName "2019.03.02"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -28,6 +28,6 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'com.google.firebase:firebase-core:16.0.6'
-    implementation 'com.jjoe64:graphview:4.2.2'
+//    implementation 'com.jjoe64:graphview:4.2.2'
 //    implementation 'com.crashlytics.sdk.android:crashlytics:2.9.8'
 }

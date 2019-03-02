@@ -1,5 +1,6 @@
 package com.dlp425.watllet;
 
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +16,7 @@ import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
@@ -47,6 +49,7 @@ public class LoginActivity extends AppCompatActivity {
         final EditText accountText = findViewById(R.id.input_account);
         final EditText pinText = findViewById(R.id.input_password);
         final Spinner resSpinner = findViewById(R.id.res_spinner);
+        final CheckBox weekendCheck = findViewById(R.id.weekends);
 
         final Button loginButton = findViewById(R.id.btn_login);
         loginButton.setOnClickListener(new View.OnClickListener() {
@@ -70,6 +73,7 @@ public class LoginActivity extends AppCompatActivity {
                 edit.putString("Acc", acc.trim());
                 edit.putString("Pin", pin.trim());
                 edit.putString("Res", res.trim());
+                edit.putBoolean("Weekend", weekendCheck.isChecked());
                 edit.apply();
 
 
@@ -80,6 +84,21 @@ public class LoginActivity extends AppCompatActivity {
                 webview.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
 
                 check_login();
+            }
+        });
+
+        CheckBox autodate = findViewById(R.id.autoDate);
+        autodate.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked){
+                    SharedPreferences.Editor edit = sp1.edit();
+                    edit.remove("LastDay");
+                    edit.apply();
+                }else{
+                    DialogFragment newFragment = new DatePickerFragment();
+                    newFragment.show(getFragmentManager(),"Last Day");
+                }
             }
         });
 
